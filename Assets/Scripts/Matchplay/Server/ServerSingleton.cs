@@ -18,11 +18,11 @@ namespace Matchplay.Server
         {
             get
             {
-                if (s_ServerSingleton != null) return s_ServerSingleton;
+                if ( s_ServerSingleton != null ) return s_ServerSingleton;
                 s_ServerSingleton = FindObjectOfType<ServerSingleton>();
-                if (s_ServerSingleton == null)
+                if ( s_ServerSingleton == null )
                 {
-                    Debug.LogError("No ServerSingleton in scene, did you run this from the bootStrap scene?");
+                    Debug.LogError( "No ServerSingleton in scene, did you run this from the bootStrap scene?" );
                     return null;
                 }
 
@@ -36,12 +36,12 @@ namespace Matchplay.Server
         {
             get
             {
-                if (m_GameManager != null)
+                if ( m_GameManager != null )
                 {
                     return m_GameManager;
                 }
 
-                Debug.LogError($"Server Manager is missing, did you run OpenConnection?");
+                Debug.LogError( $"Server Manager is missing, did you run OpenConnection?" );
                 return null;
             }
         }
@@ -59,12 +59,12 @@ namespace Matchplay.Server
                 ApplicationData.IP(),
                 ApplicationData.Port(),
                 ApplicationData.QPort(),
-                NetworkManager.Singleton);
+                NetworkManager.Singleton );
         }
 
         void Start()
         {
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad( gameObject );
         }
 
         void OnDestroy()
@@ -73,3 +73,5 @@ namespace Matchplay.Server
         }
     }
 }
+
+

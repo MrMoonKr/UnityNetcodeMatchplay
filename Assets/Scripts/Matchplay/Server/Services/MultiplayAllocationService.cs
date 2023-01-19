@@ -12,13 +12,17 @@ namespace Matchplay.Server
 {
     public class MultiplayAllocationService : IDisposable
     {
-        IMultiplayService m_MultiplayService;
-        MultiplayEventCallbacks m_Servercallbacks;
-        IServerQueryHandler m_ServerCheckManager;
-        IServerEvents m_ServerEvents;
-        string m_AllocationId;
-        bool m_LocalServerValuesChanged = false;
-        CancellationTokenSource m_ServerCheckCancel;
+        /// <summary>
+        /// 유니티 MultiplayService
+        /// </summary>
+        private IMultiplayService       m_MultiplayService;
+        private MultiplayEventCallbacks m_Servercallbacks;
+        private IServerQueryHandler     m_ServerCheckManager;
+        private IServerEvents           m_ServerEvents;
+
+        private string                  m_AllocationId;
+        private bool                    m_LocalServerValuesChanged = false;
+        private CancellationTokenSource m_ServerCheckCancel;
 
         const string k_PayloadProxyUrl = "http://localhost:8086";
 
@@ -26,12 +30,12 @@ namespace Matchplay.Server
         {
             try
             {
-                m_MultiplayService = MultiplayService.Instance;
-                m_ServerCheckCancel = new CancellationTokenSource();
+                m_MultiplayService      = MultiplayService.Instance;
+                m_ServerCheckCancel     = new CancellationTokenSource();
             }
-            catch (Exception ex)
+            catch ( Exception ex )
             {
-                Debug.LogWarning($"Error creating Multiplay allocation service.\n{ex}");
+                Debug.LogWarning( $"Error creating Multiplay allocation service.\n{ex}" );
             }
         }
 
@@ -40,15 +44,20 @@ namespace Matchplay.Server
         /// </summary>
         public async Task<MatchmakingResults> SubscribeAndAwaitMatchmakerAllocation()
         {
-            if (m_MultiplayService == null)
+            if ( m_MultiplayService == null )
+            {
                 return null;
-            m_AllocationId = null;
-            m_Servercallbacks = new MultiplayEventCallbacks();
-            m_Servercallbacks.Allocate += OnMultiplayAllocation;
-            m_ServerEvents = await m_MultiplayService.SubscribeToServerEventsAsync(m_Servercallbacks);
+            }
 
-            var allocationID = await AwaitAllocationID();
-            var mmPayload = await GetMatchmakerAllocationPayloadAsync();
+            m_AllocationId              = null;
+            m_Servercallbacks           = new MultiplayEventCallbacks();
+            m_Servercallbacks.Allocate += OnMultiplayAllocation;
+
+            // 멀티플레이 서비스 등록 요청. -> 콜백
+            m_ServerEvents              = await m_MultiplayService.SubscribeToServerEventsAsync( m_Servercallbacks );
+
+            var allocationID            = await AwaitAllocationID();
+            var mmPayload               = await GetMatchmakerAllocationPayloadAsync();
 
             return mmPayload;
         }
@@ -56,34 +65,34 @@ namespace Matchplay.Server
         //The networked server is our source of truth for what is going on, so we update our multiplay check server with values from there.
         public async Task BeginServerCheck()
         {
-            if (m_MultiplayService == null)
+            if ( m_MultiplayService == null )
                 return;
-            m_ServerCheckManager = await m_MultiplayService.StartServerQueryHandlerAsync((ushort)10,
-                "", "", "0", "");
+            m_ServerCheckManager = await m_MultiplayService.StartServerQueryHandlerAsync( ( ushort )10,
+                "", "", "0", "" );
 
 #pragma warning disable 4014
-            ServerCheckLoop(m_ServerCheckCancel.Token);
+            ServerCheckLoop( m_ServerCheckCancel.Token );
 #pragma warning restore 4014
         }
 
-        public void SetServerName(string name)
+        public void SetServerName( string name )
         {
             m_ServerCheckManager.ServerName = name;
             m_LocalServerValuesChanged = true;
         }
 
-        public void SetBuildID(string id)
+        public void SetBuildID( string id )
         {
             m_ServerCheckManager.BuildId = id;
             m_LocalServerValuesChanged = true;
         }
 
-        public void SetMaxPlayers(ushort players)
+        public void SetMaxPlayers( ushort players )
         {
             m_ServerCheckManager.MaxPlayers = players;
         }
 
-        public void SetPlayerCount(ushort count)
+        public void SetPlayerCount( ushort count )
         {
             m_ServerCheckManager.CurrentPlayers = count;
             m_LocalServerValuesChanged = true;
@@ -101,14 +110,14 @@ namespace Matchplay.Server
             m_LocalServerValuesChanged = true;
         }
 
-        public void SetMap(string newMap)
+        public void SetMap( string newMap )
         {
 
             m_ServerCheckManager.Map = newMap;
             m_LocalServerValuesChanged = true;
         }
 
-        public void SetMode(string mode)
+        public void SetMode( string mode )
         {
 
             m_ServerCheckManager.GameType = mode;
@@ -117,44 +126,49 @@ namespace Matchplay.Server
 
         public void UpdateServerIfChanged()
         {
-            if (m_LocalServerValuesChanged)
+            if ( m_LocalServerValuesChanged )
             {
                 m_ServerCheckManager.UpdateServerCheck();
                 m_LocalServerValuesChanged = false;
             }
         }
 
-        async Task ServerCheckLoop(CancellationToken cancellationToken)
+        async Task ServerCheckLoop( CancellationToken cancellationToken )
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while ( !cancellationToken.IsCancellationRequested )
             {
                 UpdateServerIfChanged();
-                await Task.Delay(1000);
+                await Task.Delay( 1000 );
             }
         }
 
+        /// <summary>
+        /// 콜백에 의해 m_AllocationId 값이 유효해 질때까지 대기.
+        /// </summary>
+        /// <returns></returns>
         async Task<string> AwaitAllocationID()
         {
             var config = m_MultiplayService.ServerConfig;
-            Debug.Log($"Awaiting Allocation. Server Config is:\n" +
+            Debug.Log( $"Awaiting Allocation. Server Config is:\n" +
                 $"-ServerID: {config.ServerId}\n" +
                 $"-AllocationID: {config.AllocationId}\n" +
                 $"-Port: {config.Port}\n" +
                 $"-QPort: {config.QueryPort}\n" +
-                $"-logs: {config.ServerLogDirectory}");
+                $"-logs: {config.ServerLogDirectory}" );
 
-            //Waiting on OnMultiplayAllocation() event (Probably wont ever happen in a matchmaker scenario)
-            while (string.IsNullOrEmpty(m_AllocationId))
+            // Waiting on OnMultiplayAllocation() event (Probably wont ever happen in a matchmaker scenario )
+            // 콜백에 의해 m_AllocationId 값이 유효해 질때까지 대기.
+            while ( string.IsNullOrEmpty( m_AllocationId ) )
             {
                 var configID = config.AllocationId;
 
-                if (!string.IsNullOrEmpty(configID) && string.IsNullOrEmpty(m_AllocationId))
+                if ( !string.IsNullOrEmpty( configID ) && string.IsNullOrEmpty( m_AllocationId ) )
                 {
-                    Debug.Log($"Config had AllocationID: {configID}");
+                    Debug.Log( $"Config had AllocationID: {configID}" );
                     m_AllocationId = configID;
                 }
 
-                await Task.Delay(100);
+                await Task.Delay( 100 );
             }
 
             return m_AllocationId;
@@ -167,41 +181,48 @@ namespace Matchplay.Server
         async Task<MatchmakingResults> GetMatchmakerAllocationPayloadAsync()
         {
             var payloadAllocation = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
-            var modelAsJson = JsonConvert.SerializeObject(payloadAllocation, Formatting.Indented);
-            Debug.Log(nameof(GetMatchmakerAllocationPayloadAsync) + ":" + Environment.NewLine + modelAsJson);
+
+            var modelAsJson = JsonConvert.SerializeObject( payloadAllocation, Formatting.Indented );
+            Debug.Log( nameof( GetMatchmakerAllocationPayloadAsync ) + " : " + Environment.NewLine + modelAsJson );
             return payloadAllocation;
         }
 
-        void OnMultiplayAllocation(MultiplayAllocation allocation)
+        void OnMultiplayAllocation( MultiplayAllocation allocation )
         {
-            Debug.Log($"OnAllocation: {allocation.AllocationId}");
-            if (string.IsNullOrEmpty(allocation.AllocationId))
+            Debug.Log( $"OnAllocation: { allocation.AllocationId }" );
+
+            if ( string.IsNullOrEmpty( allocation.AllocationId ) )
+            {
                 return;
+            }
+
             m_AllocationId = allocation.AllocationId;
         }
 
-        void OnMultiplayDeAllocation(MultiplayDeallocation deallocation)
+        void OnMultiplayDeAllocation( MultiplayDeallocation deallocation )
         {
             Debug.Log(
-                $"Multiplay Deallocated : ID: {deallocation.AllocationId}\nEvent: {deallocation.EventId}\nServer{deallocation.ServerId}");
+                $"Multiplay Deallocated : ID: {deallocation.AllocationId}\nEvent: {deallocation.EventId}\nServer{deallocation.ServerId}" );
         }
 
-        void OnMultiplayError(MultiplayError error)
+        void OnMultiplayError( MultiplayError error )
         {
-            Debug.Log($"MultiplayError : {error.Reason}\n{error.Detail}");
+            Debug.Log( $"MultiplayError : {error.Reason}\n{error.Detail}" );
         }
 
         public void Dispose()
         {
-            if (m_Servercallbacks != null)
+            if ( m_Servercallbacks != null )
             {
-                m_Servercallbacks.Allocate -= OnMultiplayAllocation;
-                m_Servercallbacks.Deallocate -= OnMultiplayDeAllocation;
-                m_Servercallbacks.Error -= OnMultiplayError;
+                m_Servercallbacks.Allocate      -= OnMultiplayAllocation;
+                m_Servercallbacks.Deallocate    -= OnMultiplayDeAllocation;
+                m_Servercallbacks.Error         -= OnMultiplayError;
             }
 
-            if (m_ServerCheckCancel != null)
+            if ( m_ServerCheckCancel != null )
+            {
                 m_ServerCheckCancel.Cancel();
+            }
 
             m_ServerEvents?.UnsubscribeAsync();
         }
@@ -209,17 +230,19 @@ namespace Matchplay.Server
 
     public static class AllocationPayloadExtensions
     {
-        public static string ToString(this MatchmakingResults payload)
+        public static string ToString( this MatchmakingResults payload )
         {
             StringBuilder payloadDescription = new StringBuilder();
-            payloadDescription.AppendLine("Matchmaker Allocation Payload:");
-            payloadDescription.AppendFormat("-QueueName: {0}\n", payload.QueueName);
-            payloadDescription.AppendFormat("-PoolName: {0}\n", payload.PoolName);
-            payloadDescription.AppendFormat("-ID: {0}\n", payload.BackfillTicketId);
-            payloadDescription.AppendFormat("-Teams: {0}\n", payload.MatchProperties.Teams.Count);
-            payloadDescription.AppendFormat("-Players: {0}\n", payload.MatchProperties.Players.Count);
-            payloadDescription.AppendFormat("-Region: {0}\n", payload.MatchProperties.Region);
+            payloadDescription.AppendLine( "Matchmaker Allocation Payload:" );
+            payloadDescription.AppendFormat( "-QueueName: {0}\n", payload.QueueName );
+            payloadDescription.AppendFormat( "-PoolName: {0}\n",  payload.PoolName );
+            payloadDescription.AppendFormat( "-ID: {0}\n",        payload.BackfillTicketId );
+            payloadDescription.AppendFormat( "-Teams: {0}\n",     payload.MatchProperties.Teams.Count );
+            payloadDescription.AppendFormat( "-Players: {0}\n",   payload.MatchProperties.Players.Count );
+            payloadDescription.AppendFormat( "-Region: {0}\n",    payload.MatchProperties.Region );
             return payloadDescription.ToString();
         }
     }
 }
+
+
