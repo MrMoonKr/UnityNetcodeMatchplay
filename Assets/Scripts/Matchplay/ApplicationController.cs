@@ -18,49 +18,49 @@ namespace Matchplay.Shared
         async void Start()
         {
             Application.targetFrameRate = 60;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad( gameObject );
 
             //We use EditorApplicationController for Editor launching.
-            if (Application.isEditor)
+            if ( Application.isEditor )
                 return;
 
             //If this is a build and we are headless, we are a server
-            await LaunchInMode(SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null);
+            await LaunchInMode( SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null );
         }
 
-        public void OnParrelSyncStarted(bool isServer, string cloneName)
+        public void OnParrelSyncStarted( bool isServer, string cloneName )
         {
 #pragma warning disable 4014
-            LaunchInMode(isServer, cloneName);
+            LaunchInMode( isServer, cloneName );
 #pragma warning restore 4014
         }
 
         /// <summary>
         /// Main project launcher, launched in Start() for builds, and via the EditorApplicationController in-editor
         /// </summary>
-        async Task LaunchInMode(bool isServer, string profileName = "default")
+        async Task LaunchInMode( bool isServer, string profileName = "default" )
         {
             //init the command parser, get launch args
             m_AppData = new ApplicationData();
             IsServer = isServer;
-            if (isServer)
+            if ( isServer )
             {
-                var serverSingleton = Instantiate(m_ServerPrefab);
+                var serverSingleton = Instantiate( m_ServerPrefab );
                 await serverSingleton.CreateServer(); //run the init instead of relying on start.
 
                 var defaultGameInfo = new GameInfo
                 {
-                    gameMode = GameMode.Meditating,
-                    map = Map.Space,
-                    gameQueue = GameQueue.Casual
+                    gameMode    = GameMode.Meditating,
+                    map         = Map.Space,
+                    gameQueue   = GameQueue.Casual
                 };
 
-                await serverSingleton.Manager.StartGameServerAsync(defaultGameInfo);
+                await serverSingleton.Manager.StartGameServerAsync( defaultGameInfo );
             }
             else
             {
-                var clientSingleton = Instantiate(m_ClientPrefab);
-                clientSingleton.CreateClient(profileName);
+                var clientSingleton = Instantiate( m_ClientPrefab );
+                clientSingleton.CreateClient( profileName );
 
                 //We want to load the main menu while the client is still initializing.
                 clientSingleton.Manager.ToMainMenu();
@@ -68,3 +68,5 @@ namespace Matchplay.Shared
         }
     }
 }
+
+

@@ -32,7 +32,7 @@ namespace Matchplay.Shared
         public MatchplayUser()
         {
             var tempId = Guid.NewGuid().ToString();
-            Data = new UserData(NameGenerator.GetName(tempId), tempId, 0, new GameInfo());
+            Data = new UserData( NameGenerator.GetName( tempId ), tempId, 0, new GameInfo() );
         }
 
         public UserData Data { get; }
@@ -43,7 +43,7 @@ namespace Matchplay.Shared
             set
             {
                 Data.userName = value;
-                onNameChanged?.Invoke(Data.userName);
+                onNameChanged?.Invoke( Data.userName );
             }
         }
 
@@ -75,8 +75,8 @@ namespace Matchplay.Shared
 
         public override string ToString()
         {
-            var userData = new StringBuilder("MatchplayUser: ");
-            userData.AppendLine($"- {Data}");
+            var userData = new StringBuilder( "MatchplayUser: " );
+            userData.AppendLine( $"- {Data}" );
             return userData.ToString();
         }
     }
@@ -92,7 +92,7 @@ namespace Matchplay.Shared
         public ulong networkId;
         public GameInfo userGamePreferences; //The game info the player thought he was joining with
 
-        public UserData(string userName, string userAuthId, ulong networkId, GameInfo userGamePreferences)
+        public UserData( string userName, string userAuthId, ulong networkId, GameInfo userGamePreferences )
         {
             this.userName = userName;
             this.userAuthId = userAuthId;
@@ -103,10 +103,10 @@ namespace Matchplay.Shared
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("UserData: ");
-            sb.AppendLine($"- User Name:             {userName}");
-            sb.AppendLine($"- User Auth Id:          {userAuthId}");
-            sb.AppendLine($"- User Game Preferences: {userGamePreferences}");
+            sb.AppendLine( "UserData: " );
+            sb.AppendLine( $"- User Name:             {userName}" );
+            sb.AppendLine( $"- User Auth Id:          {userAuthId}" );
+            sb.AppendLine( $"- User Game Preferences: {userGamePreferences}" );
             return sb.ToString();
         }
     }
@@ -123,7 +123,7 @@ namespace Matchplay.Shared
 
         //TODO YAGNI if we had different maxPlayers per gameMode i'd expand this to change with the mode type
         public int MaxUsers = 10;
-        public string ToSceneName => ConvertToScene(map);
+        public string ToSceneName => ConvertToScene( map );
 
         //QueueNames in the dashboard can be different than your local queue definitions (If you want nice names for them)
         const string k_MultiplayCasualQueue = "casual-queue";
@@ -137,26 +137,26 @@ namespace Matchplay.Shared
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("GameInfo: ");
-            sb.AppendLine($"- map:        {map}");
-            sb.AppendLine($"- gameMode:   {gameMode}");
-            sb.AppendLine($"- gameQueue:  {gameQueue}");
+            sb.AppendLine( "GameInfo: " );
+            sb.AppendLine( $"- map:        {map}" );
+            sb.AppendLine( $"- gameMode:   {gameMode}" );
+            sb.AppendLine( $"- gameQueue:  {gameQueue}" );
             return sb.ToString();
         }
 
         /// <summary>
         /// Convert the map flag enum to a scene name.
         /// </summary>
-        public static string ConvertToScene(Map map)
+        public static string ConvertToScene( Map map )
         {
-            switch (map)
+            switch ( map )
             {
                 case Map.Lab:
                     return "game_lab";
                 case Map.Space:
                     return "game_space";
                 default:
-                    Debug.LogWarning($"{map} - is not supported.");
+                    Debug.LogWarning( $"{map} - is not supported." );
                     return "";
             }
         }
@@ -175,15 +175,17 @@ namespace Matchplay.Shared
             };
         }
 
-        public static GameQueue ToGameQueue(string multiplayQueue)
+        public static GameQueue ToGameQueue( string multiplayQueue )
         {
-            if (!k_MultiplayToLocalQueueNames.ContainsKey(multiplayQueue))
+            if ( !k_MultiplayToLocalQueueNames.ContainsKey( multiplayQueue ) )
             {
-                Debug.LogWarning($"No QueuePreference that maps to {multiplayQueue}");
+                Debug.LogWarning( $"No QueuePreference that maps to {multiplayQueue}" );
                 return GameQueue.Casual;
             }
 
-            return k_MultiplayToLocalQueueNames[multiplayQueue];
+            return k_MultiplayToLocalQueueNames[ multiplayQueue ];
         }
     }
 }
+
+

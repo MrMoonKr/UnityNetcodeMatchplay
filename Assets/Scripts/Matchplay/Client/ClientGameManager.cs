@@ -17,6 +17,7 @@ namespace Matchplay.Client
     {
         public event Action<Matchplayer> MatchPlayerSpawned;
         public event Action<Matchplayer> MatchPlayerDespawned;
+
         public MatchplayUser User { get; private set; }
         public MatchplayNetworkClient NetworkClient { get; private set; }
         public MatchplayMatchmaker Matchmaker { get; private set; }
@@ -24,10 +25,11 @@ namespace Matchplay.Client
 
         public string ProfileName { get; private set; }
 
-        public ClientGameManager(string profileName = "default")
+        public ClientGameManager( string profileName = "default" )
         {
             User = new MatchplayUser();
-            Debug.Log($"Beginning with new Profile:{profileName}");
+
+            Debug.Log( $"[정보] Beginning with new Profile : {profileName}" );
             ProfileName = profileName;
 
             //We can load the mainMenu while the client initializes
@@ -44,26 +46,35 @@ namespace Matchplay.Client
         async Task InitAsync()
         {
             var unityAuthenticationInitOptions = new InitializationOptions();
-            unityAuthenticationInitOptions.SetProfile($"{ProfileName}{LocalProfileTool.LocalProfileSuffix}");
-            await UnityServices.InitializeAsync(unityAuthenticationInitOptions);
+            unityAuthenticationInitOptions.SetProfile( $"{ProfileName}{LocalProfileTool.LocalProfileSuffix}" );
 
-            NetworkClient = new MatchplayNetworkClient();
-            Matchmaker = new MatchplayMatchmaker();
-            var authenticationResult = await AuthenticationWrapper.DoAuth();
+            // 유니티 서비스 모듈 초기화.
+            await UnityServices.InitializeAsync( unityAuthenticationInitOptions );
+
+            NetworkClient               = new MatchplayNetworkClient();
+            Matchmaker                  = new MatchplayMatchmaker();
+
+            // 유니티 서비스 로그인
+            var authenticationResult    = await AuthenticationWrapper.DoAuth();
 
             //Catch for if the authentication fails, we can still do local server Testing
-            if (authenticationResult == AuthState.Authenticated)
+            if ( authenticationResult == AuthState.Authenticated )
+            {
                 User.AuthId = AuthenticationWrapper.PlayerID();
+            }
             else
+            {
                 User.AuthId = Guid.NewGuid().ToString();
-            Debug.Log($"did Auth?{authenticationResult} {User.AuthId}");
+            }
+
+            Debug.Log( $"[정보] did Auth ? {authenticationResult} {User.AuthId}" );
             Initialized = true;
         }
 
-        public void BeginConnection(string ip, int port)
+        public void BeginConnection( string ip, int port )
         {
-            Debug.Log($"Starting networkClient @ {ip}:{port}\nWith : {User}");
-            NetworkClient.StartClient(ip, port);
+            Debug.Log( $"Starting networkClient @ {ip}:{port}\nWith : {User}" );
+            NetworkClient.StartClient( ip, port );
         }
 
         public void Disconnect()
@@ -71,16 +82,16 @@ namespace Matchplay.Client
             NetworkClient.DisconnectClient();
         }
 
-        public async Task MatchmakeAsync(Action<MatchmakerPollingResult> onMatchmakerResponse = null)
+        public async Task MatchmakeAsync( Action<MatchmakerPollingResult> onMatchmakerResponse = null )
         {
-            if (Matchmaker.IsMatchmaking)
+            if ( Matchmaker.IsMatchmaking )
             {
-                Debug.LogWarning("Already matchmaking, please wait or cancel.");
+                Debug.LogWarning( "Already matchmaking, please wait or cancel." );
                 return;
             }
 
             var matchResult = await GetMatchAsync();
-            onMatchmakerResponse?.Invoke(matchResult);
+            onMatchmakerResponse?.Invoke( matchResult );
         }
 
         public async Task CancelMatchmaking()
@@ -90,43 +101,43 @@ namespace Matchplay.Client
 
         public void ToMainMenu()
         {
-            SceneManager.LoadScene("mainMenu", LoadSceneMode.Single);
+            SceneManager.LoadScene( "mainMenu", LoadSceneMode.Single );
         }
 
-        public void AddMatchPlayer(Matchplayer player)
+        public void AddMatchPlayer( Matchplayer player )
         {
-            MatchPlayerSpawned?.Invoke(player);
+            MatchPlayerSpawned?.Invoke( player );
         }
 
-        public void RemoveMatchPlayer(Matchplayer player)
+        public void RemoveMatchPlayer( Matchplayer player )
         {
-            MatchPlayerDespawned?.Invoke(player);
+            MatchPlayerDespawned?.Invoke( player );
         }
 
-        public void SetGameMode(GameMode gameMode)
+        public void SetGameMode( GameMode gameMode )
         {
             User.GameModePreferences = gameMode;
         }
 
-        public void SetGameMap(Map map)
+        public void SetGameMap( Map map )
         {
             User.MapPreferences = map;
         }
 
-        public void SetGameQueue(GameQueue queue)
+        public void SetGameQueue( GameQueue queue )
         {
             User.QueuePreference = queue;
         }
 
         async Task<MatchmakerPollingResult> GetMatchAsync()
         {
-            Debug.Log($"Beginning Matchmaking with {User}");
+            Debug.Log( $"Beginning Matchmaking with {User}" );
             var matchmakingResult = await Matchmaker.Matchmake(User.Data);
 
-            if (matchmakingResult.result == MatchmakerPollingResult.Success)
-                BeginConnection(matchmakingResult.ip, matchmakingResult.port);
+            if ( matchmakingResult.result == MatchmakerPollingResult.Success )
+                BeginConnection( matchmakingResult.ip, matchmakingResult.port );
             else
-                Debug.LogWarning($"{matchmakingResult.result} : {matchmakingResult.resultMessage}");
+                Debug.LogWarning( $"{matchmakingResult.result} : {matchmakingResult.resultMessage}" );
 
             return matchmakingResult.result;
         }
@@ -144,3 +155,5 @@ namespace Matchplay.Client
         }
     }
 }
+
+
