@@ -132,7 +132,8 @@ namespace Matchplay.Client
         async Task<MatchmakerPollingResult> GetMatchAsync()
         {
             Debug.Log( $"Beginning Matchmaking with {User}" );
-            var matchmakingResult = await Matchmaker.Matchmake(User.Data);
+
+            var matchmakingResult = await Matchmaker.Matchmake( User.Data );
 
             if ( matchmakingResult.result == MatchmakerPollingResult.Success )
                 BeginConnection( matchmakingResult.ip, matchmakingResult.port );

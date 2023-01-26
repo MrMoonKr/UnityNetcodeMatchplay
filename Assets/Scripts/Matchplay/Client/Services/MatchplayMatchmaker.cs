@@ -60,10 +60,11 @@ namespace Matchplay.Client
 
                         if ( checkTicket.Type == typeof( MultiplayAssignment ) )
                         {
-                            var matchAssignment = (MultiplayAssignment)checkTicket.Value;
+                            var matchAssignment = ( MultiplayAssignment )checkTicket.Value;
 
                             if ( matchAssignment.Status == MultiplayAssignment.StatusOptions.Found )
                                 return ReturnMatchResult( MatchmakerPollingResult.Success, "", matchAssignment );
+
                             if ( matchAssignment.Status == MultiplayAssignment.StatusOptions.Timeout ||
                                 matchAssignment.Status == MultiplayAssignment.StatusOptions.Failed )
                                 return ReturnMatchResult( MatchmakerPollingResult.MatchAssignmentError,
